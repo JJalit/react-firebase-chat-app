@@ -13,7 +13,11 @@ var firebaseConfig = {
   messagingSenderId: "177023407082",
   appId: "1:177023407082:web:34af173fed150fbb3d5893",
   measurementId: "G-J3VNR5012D",
+  databaseURL:
+    "https://react-firebase-chat-app-f3683-default-rtdb.firebaseio.com/",
 };
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 //   firebase.analytics();
+
+export default firebase;
