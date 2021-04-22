@@ -23,6 +23,7 @@ function RegisterPage() {
         .createUserWithEmailAndPassword(data.email, data.password);
       console.log("createdUser", createdUser);
 
+      // 추가적으로 displayName과 photoURL 지정
       await createdUser.user.updateProfile({
         displayName: data.name,
         photoURL: `http://gravatar.com/avatar/${md5(

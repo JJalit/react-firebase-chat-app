@@ -8,7 +8,7 @@ import RegisterPage from "./components/RegisterPage/RegisterPage";
 import firebase from "./firebase";
 
 import { useDispatch, useSelector } from "react-redux";
-import { setUser } from "./redux/actions/user_action";
+import { setUser, clearUser } from "./redux/actions/user_action";
 
 function App(props) {
   let history = useHistory();
@@ -16,15 +16,15 @@ function App(props) {
   const isLoading = useSelector((state) => state.user.isLoading);
 
   useEffect(() => {
+    // auth 관련 state 함수
     firebase.auth().onAuthStateChanged((user) => {
-      // auth 관련 state 함수
-      console.log("user", user);
       //로그인이 된 상태
       if (user) {
         history.push("/");
         dispatch(setUser(user));
       } else {
         history.push("/login");
+        dispatch(clearUser(user));
       }
     });
   }, []);
