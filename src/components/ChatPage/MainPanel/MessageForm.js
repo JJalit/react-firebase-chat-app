@@ -6,7 +6,6 @@ import Col from "react-bootstrap/Col";
 import firebase from "../../../firebase";
 import { useSelector } from "react-redux";
 import mime from "mime-types";
-
 function MessageForm() {
   const chatRoom = useSelector((state) => state.chatRoom.currentChatRoom);
   const user = useSelector((state) => state.user.currentUser);
@@ -17,6 +16,7 @@ function MessageForm() {
   const messagesRef = firebase.database().ref("messages");
   const inputOpenImageRef = useRef();
   const storageRef = firebase.storage().ref();
+  const typingRef = firebase.database().ref("typing");
   const isPrivateChatRoom = useSelector(
     (state) => state.chatRoom.isPrivateChatRoom
   );
@@ -51,6 +51,9 @@ function MessageForm() {
     //firebase에 메시지를 저장하는 부분
     try {
       await messagesRef.child(chatRoom.id).push().set(createMessage());
+
+      typingRef.child(chatRoom.id).child(user.uid).remove();
+
       setLoading(false);
       setContent("");
       setErrors([]);
@@ -87,15 +90,13 @@ function MessageForm() {
 
       //파일 저장되는 퍼센티지 구하기
       uploadTask.on(
-        // on reference 참고
-        "state_changed", // 상태가 변할 때를 감지
+        "state_changed",
         (UploadTaskSnapshot) => {
           const percentage = Math.round(
             (UploadTaskSnapshot.bytesTransferred /
               UploadTaskSnapshot.totalBytes) *
               100
           );
-          console.log(percentage);
           setPercentage(percentage);
         },
         (err) => {
@@ -105,7 +106,6 @@ function MessageForm() {
         () => {
           //저장이 다 된 후에 파일 메시지 전송 (데이터베이스에 저장)
           //저장된 파일을 다운로드 받을 수 있는 URL 가져오기
-          console.log(uploadTask);
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
             messagesRef
               .child(chatRoom.id)
@@ -120,11 +120,24 @@ function MessageForm() {
     }
   };
 
+  const handleKeyDown = (event) => {
+    if (event.ctrlKey && event.keyCode === 13) {
+      handleSubmit();
+    }
+
+    if (content) {
+      typingRef.child(chatRoom.id).child(user.uid).set(user.displayName);
+    } else {
+      typingRef.child(chatRoom.id).child(user.uid).remove();
+    }
+  };
+
   return (
     <div>
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="exampleForm.ControlTextarea1">
           <Form.Control
+            onKeyDown={handleKeyDown}
             value={content}
             onChange={handleChange}
             as="textarea"
@@ -173,7 +186,7 @@ function MessageForm() {
       </Row>
 
       <input
-        accept="image/jpeg, image/png, image/jpg"
+        accept="image/jpeg, image/png"
         style={{ display: "none" }}
         type="file"
         ref={inputOpenImageRef}
